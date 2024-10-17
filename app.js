@@ -180,6 +180,8 @@ let posts = {};
 
                 if (parentPost.author.did == process.env.MY_DID) return;
 
+                console.log(parentPost);
+
                 const response = await agent.app.bsky.graph.getRelationships({ actor: did, others: [parentPost.author.did] });
                 const relationships = response.data.relationships;
 

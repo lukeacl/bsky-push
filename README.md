@@ -10,7 +10,7 @@ Copy .env.example to .env and configure it with your DID, the AT-URI of your lis
 
 ### Locally
 
-You can execute `node app` to run the script locally in your terminal.
+You can execute `npm install` followed by `node app` to run the script locally in your terminal.
 
 ### Docker
 
@@ -19,6 +19,10 @@ You can use one of the convenience scripts below to run the script in your Docke
 - `docker-run.sh` - Runs in Docker interactively
 - `docker-deploy.sh` - Deploys and runs in Docker as a daemon
 - `docker-stop.sh` - Stops a previously deployed daemon
+
+## Support
+
+Support is limited. If you know your way around a terminal, npm and node, and Docker, you'll probably be ok! If you get too stuck you'll find me on Bluesky, [@lukeacl.com](https://bsky.app/profile/lukeacl.com).
 
 ## Contributing
 
