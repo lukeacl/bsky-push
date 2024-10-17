@@ -4,7 +4,7 @@
 
 bsky-push is a basic script that monitors a Bluesky Jetstream and sends you push notifications via Pushover when someone on a Bluesky List you specify posts or replies to someone you follow.
 
-## Running bsky-push
+## Running
 
 Copy .env.example to .env and configure it with your DID, the AT-URI of your list, and your Pushover credentials.
 
