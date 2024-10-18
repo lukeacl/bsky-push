@@ -180,10 +180,12 @@ let posts = {};
 
                 if (parentPost.author.did == process.env.MY_DID) return;
 
-                const response = await agent.app.bsky.graph.getRelationships({ actor: did, others: [parentPost.author.did] });
+                const response = await agent.app.bsky.graph.getRelationships({ actor: process.env.MY_DID, others: [parentPost.author.did] });
                 const relationships = response.data.relationships;
 
-                if (relationships[0].following !== undefined) pushPayload.message = `@${parentPost.author.handle} ${pushPayload.message}`;
+                if (relationships[0].following === undefined) return;
+                
+                pushPayload.message = `@${parentPost.author.handle} ${pushPayload.message}`;
             }
 
         }
