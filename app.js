@@ -91,8 +91,10 @@ let posts = {};
     
     jetstream.onCreate("app.bsky.graph.listitem", async (event) => {
         const did = event.commit.record.subject;
+        const uri = event.commit.record.list;
 
         if (did == process.env.MY_DID) return;
+        if (uri !== process.env.LIST_URI) return;
 
         await ensureProfile(did, true);
         const profile = profiles[event.commit.record.subject];
