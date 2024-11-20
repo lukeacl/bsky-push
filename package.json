@@ -2,7 +2,7 @@
   "type": "module",
   "dependencies": {
     "@atproto/api": "^0.13.12",
-    "@skyware/jetstream": "^0.1.9",
+    "@skyware/jetstream": "^0.2.0",
     "dotenv": "^16.4.5",
     "pushover-notifications": "^1.2.3",
     "ws": "^8.18.0"
