@@ -23,6 +23,9 @@ const notify = async (payload) => {
   if (process.env.PUSHOVER_ENABLED == "1") push.send(payload);
   if (process.env.NTFY_ENABLED == "1") {
     const ntfyPayload = {
+      ...(process.env.NTFY_BASE_URL
+        ? { server: process.env.NTFY_BASE_URL }
+        : {}),
       topic: process.env.NTFY_TOPIC,
       title: payload.title,
       message: payload.message,
