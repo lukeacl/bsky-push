@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "@atproto/api": "^0.13.12",
+    "@cityssm/ntfy-publish": "^1.0.1",
     "@skyware/jetstream": "^0.2.0",
     "dotenv": "^16.4.5",
     "ntfy": "^1.7.1",

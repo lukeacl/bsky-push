@@ -8,6 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import { AtpAgent } from "@atproto/api";
 import { publish } from "ntfy";
+import ntfyPublish from "@cityssm/ntfy-publish";
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ const notify = async (payload) => {
       message: payload.message,
       ...(payload.url ? { clickURL: payload.url } : {}),
     };
-    await publish(ntfyPayload);
+    await ntfyPublish(ntfyPayload);
   }
 };
 
@@ -61,7 +62,10 @@ let posts = {};
   notify({
     title: "Started",
     message: `Watching ${Object.keys(wantedDids).length} account${Object.keys(wantedDids).length === 1 ? "" : "s"}!`,
-    url: "https://bsky.app",
+    url: process.env.LIST_URI.replace(
+      "at://",
+      "https://bsky.app/profile/",
+    ).replace("app.bsky.graph.list", "lists"),
   });
 
   const getJetstreamOptions = () => {
@@ -139,7 +143,7 @@ let posts = {};
     let pushPayload = {
       title: "Watching",
       message: profile.handle,
-      url: "https://bsky.app",
+      url: `https://bsky.app/profile/${profile.handle}`,
     };
 
     try {
@@ -174,7 +178,7 @@ let posts = {};
     let pushPayload = {
       title: "Unwatching",
       message: profile.handle,
-      url: "https://bsky.app",
+      url: `https://bsky.app/profile/${profile.handle}`,
     };
 
     try {
