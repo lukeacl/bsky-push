@@ -199,6 +199,8 @@ let posts = {};
     };
 
     if (post.reply) {
+      if (process.env.INCLUDE_REPLIES != "1") return;
+
       const rootURI = post.reply.root.uri;
       const parentURI = post.reply.parent.uri;
       const uris = [rootURI, parentURI];
