@@ -7,6 +7,7 @@ import os from "os";
 import crypto from "crypto";
 import path from "path";
 import { AtpAgent } from "@atproto/api";
+import { publish } from "ntfy";
 
 dotenv.config();
 
@@ -16,6 +17,19 @@ const push = new Pushover({
   user: process.env.PUSHOVER_USER,
   token: process.env.PUSHOVER_APP,
 });
+
+const notify = async (payload) => {
+  if (process.env.PUSHOVER_ENABLED == "1") push.send(payload);
+  if (process.env.NTFY_ENABLED == "1") {
+    const ntfyPayload = {
+      topic: process.env.NTFY_TOPIC,
+      title: payload.title,
+      message: payload.message,
+      ...(payload.url ? { clickURL: payload.url } : {}),
+    };
+    await publish(ntfyPayload);
+  }
+};
 
 let wantedDids = {};
 let profiles = {};
@@ -44,9 +58,10 @@ let posts = {};
 
   await getWantedDids();
 
-  push.send({
+  notify({
     title: "Started",
     message: `Watching ${Object.keys(wantedDids).length} account${Object.keys(wantedDids).length === 1 ? "" : "s"}!`,
+    url: "https://bsky.app",
   });
 
   const getJetstreamOptions = () => {
@@ -136,7 +151,7 @@ let posts = {};
       pushPayload.file = avatarTempFile;
     } catch (error) {}
 
-    push.send(pushPayload);
+    notify(pushPayload);
 
     console.log(`Watching ${profile.handle}!`);
 
@@ -170,7 +185,7 @@ let posts = {};
       pushPayload.file = avatarTempFile;
     } catch (error) {}
 
-    push.send(pushPayload);
+    notify(pushPayload);
 
     console.log(`Unwatching ${profile.handle}!`);
 
@@ -234,7 +249,7 @@ let posts = {};
       pushPayload.file = avatarTempFile;
     } catch (error) {}
 
-    push.send(pushPayload);
+    notify(pushPayload);
     console.log(`${pushPayload.title}: ${pushPayload.message}`);
   });
 
