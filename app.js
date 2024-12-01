@@ -146,15 +146,17 @@ let posts = {};
       url: `https://bsky.app/profile/${profile.handle}`,
     };
 
-    try {
-      const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
-      const avatarTempFile = path.join(
-        os.tmpdir(),
-        "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
-      );
-      fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
-      pushPayload.file = avatarTempFile;
-    } catch (error) {}
+    if (process.env.INCLUDE_AVATARS == "1") {
+      try {
+        const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
+        const avatarTempFile = path.join(
+          os.tmpdir(),
+          "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
+        );
+        fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
+        pushPayload.file = avatarTempFile;
+      } catch (error) {}
+    }
 
     notify(pushPayload);
 
@@ -181,15 +183,17 @@ let posts = {};
       url: `https://bsky.app/profile/${profile.handle}`,
     };
 
-    try {
-      const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
-      const avatarTempFile = path.join(
-        os.tmpdir(),
-        "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
-      );
-      fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
-      pushPayload.file = avatarTempFile;
-    } catch (error) {}
+    if (process.env.INCLUDE_AVATARS == "1") {
+      try {
+        const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
+        const avatarTempFile = path.join(
+          os.tmpdir(),
+          "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
+        );
+        fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
+        pushPayload.file = avatarTempFile;
+      } catch (error) {}
+    }
 
     notify(pushPayload);
 
@@ -245,22 +249,20 @@ let posts = {};
       }
     }
 
-    try {
-      const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
-      const avatarTempFile = path.join(
-        os.tmpdir(),
-        "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
-      );
-      fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
-      pushPayload.file = avatarTempFile;
-    } catch (error) {}
+    if (process.env.INCLUDE_AVATARS == "1") {
+      try {
+        const avatarData = await (await fetch(profile.avatar)).arrayBuffer();
+        const avatarTempFile = path.join(
+          os.tmpdir(),
+          "bsky.avatar." + crypto.randomBytes(16).toString("hex"),
+        );
+        fs.writeFileSync(avatarTempFile, new Uint8Array(avatarData));
+        pushPayload.file = avatarTempFile;
+      } catch (error) {}
+    }
 
     notify(pushPayload);
     console.log(`${pushPayload.title}: ${pushPayload.message}`);
-  });
-
-  jetstream.on("account", (event) => {
-    console.log(event);
   });
 
   jetstream.start();
