@@ -139,6 +139,7 @@ let posts = {};
     let pushPayload = {
       title: "Watching",
       message: profile.handle,
+      url: "https://bsky.app",
     };
 
     try {
@@ -173,6 +174,7 @@ let posts = {};
     let pushPayload = {
       title: "Unwatching",
       message: profile.handle,
+      url: "https://bsky.app",
     };
 
     try {
