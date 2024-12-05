@@ -43,7 +43,7 @@ let latencyThresholdSeconds = 10;
 let latencyLastTripped = 0;
 let secondsBetweenLatencyNotifications = 300;
 
-setTimeout(() => {
+setInterval(() => {
   console.log(`Latency: ${latency.toFixed(3)}s`);
 }, 60000);
 
