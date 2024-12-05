@@ -234,7 +234,13 @@ setInterval(() => {
     }
 
     if (did == process.env.MY_DID) return;
-    if (Object.keys(wantedDids).includes(did) === false) return;
+
+    const didList = Object.keys(wantedDids).reduce(
+      (prev, curr) => [...prev, wantedDids[curr]],
+      [],
+    );
+
+    if (didList.includes(did) === false) return;
 
     const postURL = `https://bsky.app/profile/${did}/post/${rkey}`;
 
