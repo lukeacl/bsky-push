@@ -78,13 +78,13 @@ let posts = {};
         "app.bsky.graph.listitem",
         "app.bsky.feed.post",
       ],
-      wantedDids: [
+      /*wantedDids: [
         process.env.MY_DID,
         ...Object.keys(wantedDids).reduce(
           (prev, curr) => [...prev, wantedDids[curr]],
           [],
         ),
-      ],
+        ],*/
     };
     return options;
   };
@@ -144,7 +144,7 @@ let posts = {};
     const profile = profiles[event.commit.record.subject];
 
     let pushPayload = {
-      title: "Watching",
+      title: `Watching (${Object.keys(wantedDids).length})`,
       message: profile.handle,
       url: `https://bsky.app/profile/${profile.handle}`,
     };
@@ -167,7 +167,7 @@ let posts = {};
 
     wantedDids[event.commit.rkey] = event.commit.record.subject;
 
-    updateJetstreamOptions();
+    //updateJetstreamOptions();
   });
 
   jetstream.onDelete("app.bsky.graph.listitem", async (event) => {
@@ -181,7 +181,7 @@ let posts = {};
     const profile = profiles[did];
 
     let pushPayload = {
-      title: "Unwatching",
+      title: `Unwatching (${Object.keys(wantedDids).length})`,
       message: profile.handle,
       url: `https://bsky.app/profile/${profile.handle}`,
     };
@@ -204,7 +204,7 @@ let posts = {};
 
     delete wantedDids[event.commit.rkey];
 
-    updateJetstreamOptions();
+    //updateJetstreamOptions();
   });
 
   jetstream.onCreate("app.bsky.feed.post", async (event) => {
