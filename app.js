@@ -38,6 +38,9 @@ const notify = async (payload) => {
 let wantedDids = {};
 let profiles = {};
 let posts = {};
+let latencyThresholdSeconds = 0.001;
+let latencyLastTripped = 0;
+let secondsBetweenLatencyNotifications = 300;
 
 (async () => {
   const getWantedDids = async () => {
@@ -211,7 +214,23 @@ let posts = {};
     const rkey = event.commit.rkey;
     const did = event.did;
 
+    const latency = Math.abs(Date.now() - event.time_us / 1000) / 1000;
+    if (latency >= latencyThresholdSeconds) {
+      if (
+        (Date.now() - latencyLastTripped) / 1000 >=
+        secondsBetweenLatencyNotifications
+      ) {
+        latencyLastTripped = Date.now();
+        console.log(`Latency ${latency.toFixed(3)}s`);
+        notify({
+          title: "Latency",
+          message: `${latency.toFixed(3)}s`,
+        });
+      }
+    }
+
     if (did == process.env.MY_DID) return;
+    if (Object.keys(wantedDids).includes(did) === false) return;
 
     const postURL = `https://bsky.app/profile/${did}/post/${rkey}`;
 
