@@ -38,9 +38,14 @@ const notify = async (payload) => {
 let wantedDids = {};
 let profiles = {};
 let posts = {};
-let latencyThresholdSeconds = 0.001;
+let latency = 0;
+let latencyThresholdSeconds = 10;
 let latencyLastTripped = 0;
 let secondsBetweenLatencyNotifications = 300;
+
+setTimeout(() => {
+  console.log(`Latency: ${latency.toFixed(3)}s`);
+}, 60000);
 
 (async () => {
   const getWantedDids = async () => {
@@ -221,7 +226,6 @@ let secondsBetweenLatencyNotifications = 300;
         secondsBetweenLatencyNotifications
       ) {
         latencyLastTripped = Date.now();
-        console.log(`Latency ${latency.toFixed(3)}s`);
         notify({
           title: "Latency",
           message: `${latency.toFixed(3)}s`,
