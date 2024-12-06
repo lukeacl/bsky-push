@@ -219,7 +219,7 @@ setInterval(() => {
     const rkey = event.commit.rkey;
     const did = event.did;
 
-    const latency = Math.abs(Date.now() - event.time_us / 1000) / 1000;
+    latency = Math.abs(Date.now() - event.time_us / 1000) / 1000;
     if (latency >= latencyThresholdSeconds) {
       if (
         (Date.now() - latencyLastTripped) / 1000 >=
