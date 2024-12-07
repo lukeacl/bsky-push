@@ -211,6 +211,7 @@ export default class Consumer extends EventEmitter {
         const { uri } = parent;
         const [, , replyingToDID] = uri.split("/");
         if (replyingToDID === process.env.MY_DID) return;
+        if ((await this.isFollowing(replyingToDID)) === false) return;
         if (Object.hasOwn(this._didDisplayNames, replyingToDID)) {
           const replyingToHandle = this._didDisplayNames[replyingToDID];
           text = `@${replyingToHandle} ${text}`;
