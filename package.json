@@ -1,12 +1,10 @@
 {
   "type": "module",
   "dependencies": {
-    "@atproto/api": "^0.13.12",
+    "@atproto/api": "^0.13.19",
+    "@atproto/repo": "^0.5.5",
+    "@atproto/xrpc-server": "^0.7.3",
     "@cityssm/ntfy-publish": "^1.0.1",
-    "@skyware/jetstream": "^0.2.0",
-    "dotenv": "^16.4.5",
-    "ntfy": "^1.7.1",
-    "pushover-notifications": "^1.2.3",
-    "ws": "^8.18.0"
+    "dotenv": "^16.4.5"
   }
 }
