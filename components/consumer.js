@@ -61,7 +61,7 @@ export default class Consumer extends EventEmitter {
       const oneMinute = 1000 * 60 * 1;
       const fiveMinutes = 1000 * 60 * 5;
       this._latencySamples.push(latency);
-      if (Date.now() - this._lastLatency >= 1000 * 10) {
+      if (Date.now() - this._lastLatency >= oneMinute) {
         this._lastLatency = Date.now();
         let latencySamples = this._latencySamples.sort((a, b) => a - b);
         latencySamples = latencySamples.slice(1, latencySamples.length - 1);
