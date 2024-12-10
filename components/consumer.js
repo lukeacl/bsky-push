@@ -227,8 +227,8 @@ export default class Consumer extends EventEmitter {
         const [, , replyingToDID] = uri.split("/");
         if (replyingToDID === process.env.MY_DID) return;
         if ((await this.isFollowing(replyingToDID)) === false) return;
-        if (Object.hasOwn(this._didDisplayNames, replyingToDID)) {
-          const replyingToHandle = this._didDisplayNames[replyingToDID];
+        if (Object.hasOwn(this._didHandles, replyingToDID)) {
+          const replyingToHandle = this._didHandles[replyingToDID];
           text = `@${replyingToHandle} ${text}`;
         } else {
           const replyingToHandle = await this.getHandle(replyingToDID);
