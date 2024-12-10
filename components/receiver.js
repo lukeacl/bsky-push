@@ -1,6 +1,7 @@
 import { cborToLexRecord, readCar } from "@atproto/repo";
 import { Subscription } from "@atproto/xrpc-server";
 import EventEmitter from "events";
+import { performance } from "node:perf_hooks";
 
 export default class Receiver extends EventEmitter {
   static shared() {
@@ -12,6 +13,7 @@ export default class Receiver extends EventEmitter {
 
   constructor() {
     super();
+    this._filterRepos = undefined;
     this._subscription = new Subscription({
       service: "https://bsky.network",
       method: "com.atproto.sync.subscribeRepos",
@@ -29,6 +31,13 @@ export default class Receiver extends EventEmitter {
     });
   }
 
+  filterRepos(repos) {
+    this._filterRepos = repos;
+    console.log(
+      `Filtering ${repos.length} repo${repos.length === 1 ? "" : "s"}`,
+    );
+  }
+
   async start() {
     console.log("Subscribing...");
     try {
@@ -38,29 +47,33 @@ export default class Receiver extends EventEmitter {
 
         if (event.time) event.time = new Date(event.time);
 
-        const { time, seq } = event;
+        const { repo, time, seq } = event;
+
+        if (this._filterRepos !== undefined) {
+          if (this._filterRepos.includes(repo) === false) continue;
+        }
 
         const latency = (Date.now() - time.getTime()) / 1000;
         this.emit("latency", latency);
 
         switch (eventType) {
           case "commit":
-            this.handleCommmit(event);
+            await this.handleCommmit(event);
             break;
           case "tombstone":
-            this.handleTombstone(event);
+            await this.handleTombstone(event);
             break;
           case "account":
-            this.handleAccount(event);
+            await this.handleAccount(event);
             break;
           case "identity":
-            this.handleIdentity(event);
+            await this.handleIdentity(event);
             break;
           case "handle":
-            this.handleHandle(event);
+            await this.handleHandle(event);
             break;
           default:
-            this.handleUnknown(event);
+            await this.handleUnknown(event);
             break;
         }
       }
@@ -83,7 +96,6 @@ export default class Receiver extends EventEmitter {
 
   async handleCommmit(event) {
     let { time, repo, ops, blocks, blobs } = event;
-
     const car = await readCar(blocks);
     for (const op of ops) {
       const { cid, action, path } = op;
@@ -95,9 +107,7 @@ export default class Receiver extends EventEmitter {
           try {
             const record = cborToLexRecord(recordBytes);
             this.emit(action, time, repo, collection, rkey, record);
-          } catch (error) {
-            console.log(error);
-          }
+          } catch (error) {}
         }
       } else if (action === "delete") {
         this.emit(action, time, repo, collection, rkey);

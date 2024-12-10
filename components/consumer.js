@@ -28,12 +28,17 @@ export default class Consumer extends EventEmitter {
   async start() {
     await this.fetchWantedRepos();
     const receiver = Receiver.shared();
-    receiver.on("create", (time, repo, collection, rkey, record) => {
+    const updateFilterRepos = () => {
+      receiver.filterRepos([...this._wantedDIDs, process.env.MY_DID]);
+    };
+    updateFilterRepos();
+    receiver.on("create", async (time, repo, collection, rkey, record) => {
       if (collection === "app.bsky.graph.listitem") {
         if (repo === process.env.MY_DID) {
           const { list, subject: did } = record;
           if (list === process.env.LIST_URI) {
-            this.watch(did, rkey);
+            await this.watch(did, rkey);
+            updateFilterRepos();
           }
         }
       }
@@ -43,11 +48,11 @@ export default class Consumer extends EventEmitter {
         }
       }
     });
-    receiver.on("update", (time, repo, collection, rkey, record) => {});
-    receiver.on("delete", (time, repo, collection, rkey) => {
+    receiver.on("delete", async (time, repo, collection, rkey) => {
       if (collection === "app.bsky.graph.listitem") {
         if (repo === process.env.MY_DID) {
-          this.unwatch(rkey);
+          await this.unwatch(rkey);
+          updateFilterRepos();
         }
       }
     });
@@ -64,7 +69,8 @@ export default class Consumer extends EventEmitter {
             message: `${latency.toFixed(3)}s`,
           }),
         );*/
-      } else if (Date.now() - this._lastLatency >= fiveMinutes) {
+      } else if (Date.now() - this._lastLatency >= oneMinute) {
+        //make it one for now
         this._lastLatency = Date.now();
         console.log("Latency:", latency.toFixed(3) * 1);
       }
