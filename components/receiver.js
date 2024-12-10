@@ -49,12 +49,12 @@ export default class Receiver extends EventEmitter {
 
         const { repo, time, seq } = event;
 
+        const latency = (Date.now() - time.getTime()) / 1000;
+        this.emit("latency", latency);
+
         if (this._filterRepos !== undefined) {
           if (this._filterRepos.includes(repo) === false) continue;
         }
-
-        const latency = (Date.now() - time.getTime()) / 1000;
-        this.emit("latency", latency);
 
         switch (eventType) {
           case "commit":
