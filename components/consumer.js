@@ -14,6 +14,7 @@ export default class Consumer extends EventEmitter {
 
   constructor() {
     super();
+    this._latencySamples = [];
     this._lastLatency = 0;
     this._lastExcessLatency = 0;
     this._wantedDIDs = [];
@@ -59,21 +60,29 @@ export default class Consumer extends EventEmitter {
     receiver.on("latency", async (latency) => {
       const oneMinute = 1000 * 60 * 1;
       const fiveMinutes = 1000 * 60 * 5;
-      if (latency >= 5 && Date.now() - this._lastExcessLatency >= oneMinute) {
+      this._latencySamples.push(latency);
+      if (Date.now() - this._lastLatency >= 1000 * 10) {
+        this._lastLatency = Date.now();
+        let latencySamples = this._latencySamples.sort((a, b) => a - b);
+        latencySamples = latencySamples.slice(1, latencySamples.length - 1);
+        if (latencySamples.length > 0) {
+          const latencySum = latencySamples.reduce(
+            (prev, next) => prev + next,
+            0,
+          );
+          const trimmedLatency = latencySum / latencySamples.length;
+          console.log("Latency:", trimmedLatency.toFixed(3) * 1);
+        }
+        this._latencySamples = [];
+      }
+      /*if (latency >= 5 && Date.now() - this._lastExcessLatency >= oneMinute) {
         this._lastLatency = Date.now();
         this._lastExcessLatency = Date.now();
         console.log("Latency:", latency.toFixed(3) * 1);
-        /*await ntfy(
-          this.parseNotifyPayload({
-            title: "Latency",
-            message: `${latency.toFixed(3)}s`,
-          }),
-        );*/
       } else if (Date.now() - this._lastLatency >= oneMinute) {
-        //make it one for now
         this._lastLatency = Date.now();
         console.log("Latency:", latency.toFixed(3) * 1);
-      }
+        }*/
     });
     receiver.on("connected", async () => {
       await ntfy(
