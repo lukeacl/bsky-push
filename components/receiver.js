@@ -92,8 +92,12 @@ export default class Receiver extends EventEmitter {
       if (action === "create" || action === "update") {
         if (cid !== null) {
           const recordBytes = car.blocks.get(cid);
-          const record = cborToLexRecord(recordBytes);
-          this.emit(action, time, repo, collection, rkey, record);
+          try {
+            const record = cborToLexRecord(recordBytes);
+            this.emit(action, time, repo, collection, rkey, record);
+          } catch (error) {
+            console.log(error);
+          }
         }
       } else if (action === "delete") {
         this.emit(action, time, repo, collection, rkey);
