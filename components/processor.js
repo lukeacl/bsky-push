@@ -2,12 +2,13 @@ import { AtpAgent, AppBskyGraphListitem } from "@atproto/api";
 import ntfy from "@cityssm/ntfy-publish";
 import EventEmitter from "events";
 
-import Receiver from "./receiver.js";
+import Logger from "./logger.js";
+import JetstreamClient from "./jetstreamClient.js";
 
-export default class Consumer extends EventEmitter {
+export default class Processor extends EventEmitter {
   static shared() {
     if (!this._instance) {
-      this._instance = new Consumer();
+      this._instance = new Processor();
     }
     return this._instance;
   }
@@ -28,90 +29,50 @@ export default class Consumer extends EventEmitter {
 
   async start() {
     await this.fetchWantedRepos();
-    const receiver = Receiver.shared();
+    const client = JetstreamClient.shared();
+    client.filterCollections(["app.bsky.graph.listitem", "app.bsky.feed.post"]);
     const updateFilterRepos = () => {
-      receiver.filterRepos([...this._wantedDIDs, process.env.MY_DID]);
+      client.filterRepos([...this._wantedDIDs, process.env.MY_DID]);
     };
     updateFilterRepos();
-    receiver.on("create", async (time, repo, collection, rkey, record) => {
-      if (collection === "app.bsky.graph.listitem") {
-        if (repo === process.env.MY_DID) {
-          const { list, subject: did } = record;
-          if (list === process.env.LIST_URI) {
-            await this.watch(did, rkey);
-            updateFilterRepos();
+    client.on("commit", async (data) => {
+      try {
+        const { did, commit } = data;
+        const { operation, collection, rkey } = commit;
+
+        if (operation === "create") {
+          const { record } = commit;
+
+          if (collection === "app.bsky.graph.listitem") {
+            if (did === process.env.MY_DID) {
+              const { list, subject: did } = record;
+              if (list === process.env.LIST_URI) {
+                await this.watch(did, rkey);
+                updateFilterRepos();
+              }
+            }
+          }
+
+          if (collection === "app.bsky.feed.post") {
+            if (this._wantedDIDs.includes(did)) {
+              this.handlePost(did, rkey, record);
+            }
           }
         }
-      }
-      if (collection === "app.bsky.feed.post") {
-        if (this._wantedDIDs.includes(repo)) {
-          this.handlePost(repo, rkey, record);
+
+        if (operation === "delete") {
+          if (collection === "app.bsky.graph.listitem") {
+            if (did === process.env.MY_DID) {
+              await this.unwatch(rkey);
+              updateFilterRepos();
+            }
+          }
         }
+      } catch (error) {
+        Logger.shared().info(`${error}`);
       }
     });
-    receiver.on("delete", async (time, repo, collection, rkey) => {
-      if (collection === "app.bsky.graph.listitem") {
-        if (repo === process.env.MY_DID) {
-          await this.unwatch(rkey);
-          updateFilterRepos();
-        }
-      }
-    });
-    receiver.on("latency", async (latency) => {
-      const oneMinute = 1000 * 60 * 1;
-      const fiveMinutes = 1000 * 60 * 5;
-      this._latencySamples.push(latency);
-      if (Date.now() - this._lastLatency >= oneMinute) {
-        this._lastLatency = Date.now();
-        let latencySamples = this._latencySamples.sort((a, b) => a - b);
-        latencySamples = latencySamples.slice(1, latencySamples.length - 1);
-        if (latencySamples.length > 0) {
-          const latencySum = latencySamples.reduce(
-            (prev, next) => prev + next,
-            0,
-          );
-          const trimmedLatency = latencySum / latencySamples.length;
-          console.log("Latency:", trimmedLatency.toFixed(3) * 1);
-        }
-        this._latencySamples = [];
-      }
-      /*if (latency >= 5 && Date.now() - this._lastExcessLatency >= oneMinute) {
-        this._lastLatency = Date.now();
-        this._lastExcessLatency = Date.now();
-        console.log("Latency:", latency.toFixed(3) * 1);
-      } else if (Date.now() - this._lastLatency >= oneMinute) {
-        this._lastLatency = Date.now();
-        console.log("Latency:", latency.toFixed(3) * 1);
-        }*/
-    });
-    receiver.on("connected", async () => {
-      await ntfy(
-        this.parseNotifyPayload({
-          title: "Connected",
-          message: `Firehose connected.`,
-          //clickURL: "",
-        }),
-      );
-    });
-    receiver.on("disconnected", async (error) => {
-      await ntfy(
-        this.parseNotifyPayload({
-          title: "Disconnected",
-          message: `${error}`,
-          //clickURL: "",
-        }),
-      );
-    });
-    receiver.on("disconnectedSlow", async () => {
-      await ntfy(
-        this.parseNotifyPayload({
-          title: "Disconnected",
-          message: `Firehose disconnected. We're too slow.`,
-          //clickURL: "",
-        }),
-      );
-    });
-    receiver.start();
+    client.start();
   }
 
   parseNotifyPayload(payload) {
@@ -125,6 +86,7 @@ export default class Consumer extends EventEmitter {
   }
 
   async fetchWantedRepos() {
+    Logger.shared().info(`Fetching wanted repos...`);
     const response = await this._agent.app.bsky.graph.getList({
       list: process.env.LIST_URI,
     });
@@ -138,7 +100,7 @@ export default class Consumer extends EventEmitter {
       this._rKeyDIDs[rkey] = did;
     }
     this._wantedDIDs = response.data.items.map((item) => item.subject.did);
-    console.log("Watching:", this._wantedDIDs.length);
+    Logger.shared().info(`Watching: ${this._wantedDIDs.length}`);
     await ntfy(
       this.parseNotifyPayload({
         title: "Watching",
@@ -159,7 +121,9 @@ export default class Consumer extends EventEmitter {
       this._didDisplayNames[did] = displayName || handle;
       this._rKeyDIDs[rkey] = did;
       this._wantedDIDs.push(did);
-      console.log("Watch:", did, handle, this._wantedDIDs.length);
+      Logger.shared().info(
+        `Watch: ${did}, ${handle}, ${this._wantedDIDs.length}`,
+      );
       await ntfy(
         this.parseNotifyPayload({
           title: `Watching (${this._wantedDIDs.length})`,
@@ -181,7 +145,9 @@ export default class Consumer extends EventEmitter {
       this._wantedDIDs = this._wantedDIDs.filter(
         (wantedDID) => wantedDID !== did,
       );
-      console.log("Unwatch:", did, handle, this._wantedDIDs.length);
+      Logger.shared().info(
+        `Unwatch: ${did}, ${handle}, ${this._wantedDIDs.length}`,
+      );
       await ntfy(
         this.parseNotifyPayload({
           title: `Unwatching (${this._wantedDIDs.length})`,
@@ -236,7 +202,7 @@ export default class Consumer extends EventEmitter {
         }
       }
       const url = `https://bsky.app/profile/${did}/post/${rkey}`;
-      console.log(`Post: @${handle}: ${text}`);
+      Logger.shared().info(`Post: @${handle}: ${text}`);
       await ntfy(
         this.parseNotifyPayload({
           title: `@${handle}`,

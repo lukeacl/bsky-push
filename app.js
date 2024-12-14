@@ -2,6 +2,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-import Consumer from "./components/consumer.js";
+import Processor from "./components/processor.js";
 
-const consumer = Consumer.shared();
+Processor.shared();
